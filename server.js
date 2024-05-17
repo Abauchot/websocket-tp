@@ -1,6 +1,7 @@
 const express = require('express');
 const next = require('next');
-const WebSocket = require('ws');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
@@ -8,20 +9,18 @@ const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
   const server = express();
+  const httpServer = http.createServer(server);
+  const io = new Server(httpServer);
 
-  server.use(express.json());
+  io.on('connection', (socket) => {
+    console.log('New client connected');
 
-  // API RESTful pour gérer les utilisateurs et leurs positions
-  server.post('/api/position', (req, res) => {
-    // Logique pour mettre à jour la position de l'utilisateur
-    res.status(200).send('Position updated');
-  });
+    socket.on('sendMessage', (message) => {
+      io.emit('receiveMessage', message);
+    });
 
-  // WebSocket pour la communication en temps réel
-  const wss = new WebSocket.Server({ noServer: true });
-  wss.on('connection', (ws) => {
-    ws.on('message', (message) => {
-      // Logique pour gérer les messages WebSocket
+    socket.on('disconnect', () => {
+      console.log('Client disconnected');
     });
   });
 
@@ -30,14 +29,8 @@ app.prepare().then(() => {
   });
 
   const PORT = process.env.PORT || 3000;
-  server.listen(PORT, (err) => {
+  httpServer.listen(PORT, (err) => {
     if (err) throw err;
     console.log(`> Ready on http://localhost:${PORT}`);
-  });
-
-  server.on('upgrade', (request, socket, head) => {
-    wss.handleUpgrade(request, socket, head, (ws) => {
-      wss.emit('connection', ws, request);
-    });
   });
 });

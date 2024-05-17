@@ -58,7 +58,7 @@ export default function Home() {
     <div>
       <h1>Application de Suivi en Temps Réel et Visioconférence</h1>
       <div>
-        <LoadScript googleMapsApiKey="NEXT_PUBLIC_GOOGLE_MAPS_API_KEY">
+        <LoadScript googleMapsApiKey="GOOGLE_MAPS_API_KEY">
           <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={5}>
             {positions.map((position, index) => (
               <Marker key={index} position={{ lat: position.lat, lng: position.lng }} />

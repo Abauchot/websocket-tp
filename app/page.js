@@ -1,18 +1,17 @@
 'use client'
 import { useState, useEffect, useRef } from 'react';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import Peer from 'simple-peer';
 import io from 'socket.io-client';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+
 
 const containerStyle = {
   width: '100%',
-  height: '400px'
+  height: '500px'
 };
 
-const center = {
-  lat: 46.603354,
-  lng: 1.888334
-};
+const center = [46.603354, 1.888334];
 
 export default function Home() {
   const [positions, setPositions] = useState([]);
@@ -23,6 +22,8 @@ export default function Home() {
   const socketRef = useRef();
   const userVideo = useRef();
   const peersRef = useRef([]);
+
+  
 
   useEffect(() => {
     socketRef.current = io();
@@ -90,7 +91,7 @@ export default function Home() {
       peersRef.current.push(peer);
     });
   }, []);
-
+/*
   return (
     <div>
       <h1>Application de Suivi en Temps Réel et Visioconférence</h1>
@@ -149,4 +150,57 @@ export default function Home() {
       `}</style>
     </div>
   );
+*/
+return (
+  <div>
+    <h1>Application de Suivi en Temps Réel et Visioconférence</h1>
+    <div>
+      <MapContainer center={center} zoom={6} style={containerStyle}>
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
+        {positions.map((position, index) => (
+          <Marker key={index} position={[position.lat, position.lng]}>
+            <Popup>
+              A pretty CSS3 popup. <br /> Easily customizable.
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
+    <div>
+      <video ref={userVideo} autoPlay playsInline style={{ width: '300px', height: '200px' }} />
+    </div>
+    {isChatVisible ? (
+      <div>
+        <div className="chat-box">
+          {messages.map((msg, index) => (
+            <div key={index}>
+              <strong>{msg.user}: </strong>{msg.text}
+            </div>
+          ))}
+        </div>
+        <input
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          onKeyPress={(e) => handleKeyPress(e, handleSendMessage)}
+          placeholder="Enter your username"
+          style={{ color:'black' }}
+        />
+        <button onClick={handleLogin}>Join Chat</button>
+        <style jsx>{`
+          .chat-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 300px;
+            height: 200px;
+            overflow-y: scroll;
+          }
+        `}</style>
+      </div>
+    ) : null}
+  </div>
+);
 }

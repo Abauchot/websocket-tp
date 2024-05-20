@@ -4,12 +4,15 @@ import Peer from 'simple-peer';
 import io from 'socket.io-client';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import dynamic from 'next/dynamic';
 
 
 const containerStyle = {
   width: '100%',
   height: '500px'
 };
+
+const LeafletMap = dynamic( () => import('../components/LeafletMap'), { ssr: false } );
 
 const center = [46.603354, 1.888334];
 
@@ -82,12 +85,10 @@ export default function Home() {
       });
 
       peer.on('stream', stream => {
-        if (typeof window !== 'undefined') {
-          const video = document.createElement('video');
-          video.srcObject = stream;
-          video.play();
-          document.body.append(video);
-        }
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.play();
+        document.body.append(video);
       });
 
       peersRef.current.push(peer);
@@ -155,22 +156,12 @@ export default function Home() {
 */
 return (
   <div>
+  <div>
     <h1>Application de Suivi en Temps Réel et Visioconférence</h1>
     <div>
-      <MapContainer center={center} zoom={6} style={containerStyle}>
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
-        {positions.map((position, index) => (
-          <Marker key={index} position={[position.lat, position.lng]}>
-            <Popup>
-              A pretty CSS3 popup. <br /> Easily customizable.
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
+      <LeafletMap center={center} positions={positions} />
     </div>
+  </div>
     <div>
       <video ref={userVideo} autoPlay playsInline style={{ width: '300px', height: '200px' }} />
     </div>

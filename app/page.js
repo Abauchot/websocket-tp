@@ -1,18 +1,23 @@
 'use client'
 import { useState, useEffect, useRef } from 'react';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import Peer from 'simple-peer';
 import io from 'socket.io-client';
-
-const containerStyle = {
-  width: '100%',
-  height: '400px'
-};
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
 const center = {
   lat: 46.603354,
   lng: 1.888334
 };
+
+// Set up the default icon for Leaflet to avoid missing icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 export default function Home() {
   const [positions, setPositions] = useState([]);
@@ -95,13 +100,15 @@ export default function Home() {
     <div>
       <h1>Application de Suivi en Temps Réel et Visioconférence</h1>
       <div>
-        <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}>
-          <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={4}>
-            {positions.map((position, index) => (
-              <Marker key={index} position={{ lat: position.lat, lng: position.lng }} />
-            ))}
-          </GoogleMap>
-        </LoadScript>
+        <MapContainer center={center} zoom={4} style={{ width: '100%', height: '400px' }}>
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          />
+          {positions.map((position, index) => (
+            <Marker key={index} position={[position.lat, position.lng]} />
+          ))}
+        </MapContainer>
       </div>
       <div>
         <video ref={userVideo} autoPlay playsInline style={{ width: '300px', height: '200px' }} />
@@ -131,7 +138,7 @@ export default function Home() {
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            onKeyPress={(e) => handleKeyPress(e, handleSendMessage)}
+            onKeyPress={(e) => handleKeyPress(e, handleLogin)}
             placeholder="Enter your username"
             style={{ color:'black' }}
           />

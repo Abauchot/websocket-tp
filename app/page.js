@@ -1,10 +1,14 @@
 'use client'
+import dynamic from 'next/dynamic';
 import { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import Peer from 'simple-peer';
 import io from 'socket.io-client';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+
+const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
+const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
 
 const center = {
   lat: 46.603354,

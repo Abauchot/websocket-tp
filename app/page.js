@@ -2,15 +2,8 @@
 import { useState, useEffect, useRef } from 'react';
 import Peer from 'simple-peer';
 import io from 'socket.io-client';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
 import dynamic from 'next/dynamic';
 
-
-const containerStyle = {
-  width: '100%',
-  height: '500px'
-};
 
 const LeafletMap = dynamic( () => import('../components/LeafletMap'), { ssr: false } );
 

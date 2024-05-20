@@ -19,6 +19,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+const isBrowser = () => typeof window !== 'undefined';
+
 export default function Home() {
   const [positions, setPositions] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -30,15 +32,17 @@ export default function Home() {
   const peersRef = useRef([]);
 
   useEffect(() => {
-    socketRef.current = io();
+    if (isBrowser()) {
+      socketRef.current = io();
 
-    socketRef.current.on('receiveMessage', (message) => {
-      setMessages((prevMessages) => [...prevMessages, message]);
-    });
+      socketRef.current.on('receiveMessage', (message) => {
+        setMessages((prevMessages) => [...prevMessages, message]);
+      });
 
-    return () => {
-      socketRef.current.disconnect();
-    };
+      return () => {
+        socketRef.current.disconnect();
+      };
+    }
   }, []);
 
   const handleSendMessage = () => {
@@ -63,7 +67,7 @@ export default function Home() {
   }
 
   useEffect(() => {
-    if (navigator.geolocation) {
+    if (isBrowser() && navigator.geolocation) {
       navigator.geolocation.watchPosition((position) => {
         const { latitude, longitude } = position.coords;
         setPositions((prev) => [...prev, { lat: latitude, lng: longitude }]);
@@ -72,43 +76,47 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-      userVideo.current.srcObject = stream;
+    if (isBrowser() && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+        userVideo.current.srcObject = stream;
 
-      const peer = new Peer({
-        initiator: true,
-        trickle: false,
-        stream
+        const peer = new Peer({
+          initiator: true,
+          trickle: false,
+          stream
+        });
+
+        peer.on('signal', signal => {
+          // Envoyer le signal à d'autres utilisateurs
+        });
+
+        peer.on('stream', stream => {
+          const video = document.createElement('video');
+          video.srcObject = stream;
+          video.play();
+          document.body.append(video);
+        });
+
+        peersRef.current.push(peer);
       });
-
-      peer.on('signal', signal => {
-        // Envoyer le signal à d'autres utilisateurs
-      });
-
-      peer.on('stream', stream => {
-        const video = document.createElement('video');
-        video.srcObject = stream;
-        video.play();
-        document.body.append(video);
-      });
-
-      peersRef.current.push(peer);
-    });
+    }
   }, []);
 
   return (
     <div>
       <h1>Application de Suivi en Temps Réel et Visioconférence</h1>
       <div>
-        <MapContainer center={center} zoom={4} style={{ width: '100%', height: '400px' }}>
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          />
-          {positions.map((position, index) => (
-            <Marker key={index} position={[position.lat, position.lng]} />
-          ))}
-        </MapContainer>
+        {isBrowser() && (
+          <MapContainer center={center} zoom={4} style={{ width: '100%', height: '400px' }}>
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            />
+            {positions.map((position, index) => (
+              <Marker key={index} position={[position.lat, position.lng]} />
+            ))}
+          </MapContainer>
+        )}
       </div>
       <div>
         <video ref={userVideo} autoPlay playsInline style={{ width: '300px', height: '200px' }} />

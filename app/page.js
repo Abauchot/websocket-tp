@@ -82,10 +82,12 @@ export default function Home() {
       });
 
       peer.on('stream', stream => {
-        const video = document.createElement('video');
-        video.srcObject = stream;
-        video.play();
-        document.body.append(video);
+        if (typeof window !== 'undefined') {
+          const video = document.createElement('video');
+          video.srcObject = stream;
+          video.play();
+          document.body.append(video);
+        }
       });
 
       peersRef.current.push(peer);

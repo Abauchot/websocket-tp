@@ -32,7 +32,7 @@ export default function Home() {
   const peersRef = useRef([]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (isBrowser()) {
       socketRef.current = io();
   
       socketRef.current.on('receiveMessage', (message) => {
@@ -87,7 +87,7 @@ export default function Home() {
         });
 
         peer.on('signal', signal => {
-          // Envoyer le signal à d'autres utilisateurs
+          // Send the signal to other users
         });
 
         peer.on('stream', stream => {

@@ -32,13 +32,13 @@ export default function Home() {
   const peersRef = useRef([]);
 
   useEffect(() => {
-    if (isBrowser()) {
+    if (typeof window !== 'undefined') {
       socketRef.current = io();
-
+  
       socketRef.current.on('receiveMessage', (message) => {
         setMessages((prevMessages) => [...prevMessages, message]);
       });
-
+  
       return () => {
         socketRef.current.disconnect();
       };

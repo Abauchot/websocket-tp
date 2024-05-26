@@ -1,46 +1,30 @@
+// pages/index.js
 'use client'
 import { useState, useEffect, useRef } from 'react';
 import Peer from 'simple-peer';
 import io from 'socket.io-client';
 import dynamic from 'next/dynamic';
+import Chatbox from '../components/Chatbox';
 
-
-const LeafletMap = dynamic( () => import('../components/LeafletMap'), { ssr: false } );
+const LeafletMap = dynamic(() => import('../components/LeafletMap'), { ssr: false });
 
 const center = [46.603354, 1.888334];
 
 export default function Home() {
   const [positions, setPositions] = useState([]);
-  const [messages, setMessages] = useState([]);
-  const [message, setMessage] = useState('');
   const [username, setUsername] = useState('');
   const [isChatVisible, setIsChatVisible] = useState(false);
   const socketRef = useRef();
   const userVideo = useRef();
   const peersRef = useRef([]);
 
-  
-
   useEffect(() => {
     socketRef.current = io();
-
-    socketRef.current.on('receiveMessage', (message) => {
-      setMessages((prevMessages) => [...prevMessages, message]);
-    });
 
     return () => {
       socketRef.current.disconnect();
     };
   }, []);
-
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      const newMessage = { user: username, text: message };
-      socketRef.current.emit('sendMessage', newMessage);
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-      setMessage('');
-    }
-  };
 
   const handleLogin = () => {
     if (username.trim()) {
@@ -48,11 +32,16 @@ export default function Home() {
     }
   };
 
-  const handleKeyPress = (event, callback) => {
+  const handleLogout = () => {
+    setIsChatVisible(false);
+    setUsername('');
+  };
+
+  const handleKeyPress = (event) => {
     if (event.key === 'Enter') {
-      callback();
+      handleLogin();
     }
-  }
+  };
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -64,20 +53,20 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
       userVideo.current.srcObject = stream;
 
       const peer = new Peer({
         initiator: true,
         trickle: false,
-        stream
+        stream,
       });
 
-      peer.on('signal', signal => {
+      peer.on('signal', (signal) => {
         // Envoyer le signal à d'autres utilisateurs
       });
 
-      peer.on('stream', stream => {
+      peer.on('stream', (stream) => {
         const video = document.createElement('video');
         video.srcObject = stream;
         video.play();
@@ -87,106 +76,31 @@ export default function Home() {
       peersRef.current.push(peer);
     });
   }, []);
-/*
+
   return (
     <div>
       <h1>Application de Suivi en Temps Réel et Visioconférence</h1>
       <div>
-        <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}>
-          <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={4}>
-            {positions.map((position, index) => (
-              <Marker key={index} position={{ lat: position.lat, lng: position.lng }} />
-            ))}
-          </GoogleMap>
-        </LoadScript>
+        <LeafletMap center={center} positions={positions} />
       </div>
       <div>
         <video ref={userVideo} autoPlay playsInline style={{ width: '300px', height: '200px' }} />
       </div>
       {isChatVisible ? (
-        <div>
-          <div className="chat-box">
-            {messages.map((msg, index) => (
-              <div key={index}>
-                <strong>{msg.user}: </strong>{msg.text}
-              </div>
-            ))}
-          </div>
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={(e) => handleKeyPress(e, handleSendMessage)}
-            placeholder="Type a message"
-            style={{ color:'black' }}
-          />
-          <button onClick={handleSendMessage}>Send</button>
-        </div>
+        <Chatbox username={username} socket={socketRef.current} onLogout={handleLogout} />
       ) : (
         <div>
           <input
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            onKeyPress={(e) => handleKeyPress(e, handleSendMessage)}
+            onKeyPress={handleKeyPress}
             placeholder="Enter your username"
-            style={{ color:'black' }}
+            style={{ color: 'black' }}
           />
           <button onClick={handleLogin}>Join Chat</button>
         </div>
       )}
-      <style jsx>{`
-        .chat-box {
-          border: 1px solid #ccc;
-          padding: 10px;
-          width: 300px;
-          height: 200px;
-          overflow-y: scroll;
-        }
-      `}</style>
     </div>
   );
-*/
-return (
-  <div>
-  <div>
-    <h1>Application de Suivi en Temps Réel et Visioconférence</h1>
-    <div>
-      <LeafletMap center={center} positions={positions} />
-    </div>
-  </div>
-    <div>
-      <video ref={userVideo} autoPlay playsInline style={{ width: '300px', height: '200px' }} />
-    </div>
-    {isChatVisible ? (
-      <div>
-        <div className="chat-box">
-          {messages.map((msg, index) => (
-            <div key={index}>
-              <strong>{msg.user}: </strong>{msg.text}
-            </div>
-          ))}
-        </div>
-        <input
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          onKeyPress={(e) => handleKeyPress(e, handleSendMessage)}
-          placeholder="Enter your username"
-          style={{ color:'black' }}
-        />
-        <button onClick={handleLogin}>Join Chat</button>
-        <style jsx>{`
-          .chat-box {
-            border: 1px solid #ccc;
-            padding: 10px;
-            width: 300px;
-            height: 200px;
-            overflow-y: scroll;
-          }
-        `}</style>
-      </div>
-    ) : null}
-  </div>
-);
 }

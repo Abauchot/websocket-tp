@@ -1,5 +1,7 @@
 PROBLEME CONNU : 
-Actuellement je n'arrive pas à afficher les autres utilisateurs sur la map / chatbox / webcam
+Actuellement je n'arrive pas à afficher les autres utilisateurs sur la map / chatbox / webcam : 
+- C'est normal parce que Vercel et Socket.io ne sont pas compatible
+- migration prévu vers : https://pusher.com/ - https://vercel.com/guides/deploying-pusher-channels-with-vercel
 
 
 
